@@ -122,4 +122,58 @@ describe("TaskCard", () => {
     expect(taskCard).toHaveClass("rounded-lg");
     expect(taskCard).toHaveClass("cursor-grab");
   });
+
+  it("does not render due date when not provided", () => {
+    render(<TaskCard {...defaultProps} item={mockItems.simple} />);
+    expect(
+      screen.queryByTestId(`due-date-${mockItems.simple.id}`),
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders due date when provided", () => {
+    const itemWithDueDate = {
+      ...mockItems.simple,
+      due_date: "2099-12-31T00:00:00",
+    };
+    render(<TaskCard {...defaultProps} item={itemWithDueDate} />);
+    expect(
+      screen.getByTestId(`due-date-${itemWithDueDate.id}`),
+    ).toBeInTheDocument();
+  });
+
+  it("applies green color for due date more than 7 days away", () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 10);
+    const itemWithDueDate = {
+      ...mockItems.simple,
+      due_date: future.toISOString(),
+    };
+    render(<TaskCard {...defaultProps} item={itemWithDueDate} />);
+    const dueDateEl = screen.getByTestId(`due-date-${itemWithDueDate.id}`);
+    expect(dueDateEl).toHaveClass("text-green-600");
+  });
+
+  it("applies orange color for due date between 1 and 7 days away", () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 3);
+    const itemWithDueDate = {
+      ...mockItems.simple,
+      due_date: future.toISOString(),
+    };
+    render(<TaskCard {...defaultProps} item={itemWithDueDate} />);
+    const dueDateEl = screen.getByTestId(`due-date-${itemWithDueDate.id}`);
+    expect(dueDateEl).toHaveClass("text-orange-500");
+  });
+
+  it("applies red color for overdue due date", () => {
+    const past = new Date();
+    past.setDate(past.getDate() - 1);
+    const itemWithDueDate = {
+      ...mockItems.simple,
+      due_date: past.toISOString(),
+    };
+    render(<TaskCard {...defaultProps} item={itemWithDueDate} />);
+    const dueDateEl = screen.getByTestId(`due-date-${itemWithDueDate.id}`);
+    expect(dueDateEl).toHaveClass("text-red-600");
+  });
 });
